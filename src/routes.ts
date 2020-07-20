@@ -1,8 +1,6 @@
 import express from "express";
 import { processarRequisicao } from "./app";
-import connection from "./database/connection";
 
-var dbConnection = connection;
 const routes = express.Router();
 
 routes.get("/", (request, response) => {
@@ -10,7 +8,7 @@ routes.get("/", (request, response) => {
 });
 
 routes.post("/capturar_requisicoes", async (request, response) => {
-  //processarRequisicao(request.body);
+  processarRequisicao(request.body);
 });
 
 export default routes;

@@ -227,17 +227,6 @@ function enviaTexto(mensagem: textoSimples) {
   enviaMensagem(textoRequisicao);
 }
 
-function pegarTodasEmpresas(): empresa[] {
-  return [
-    {
-      nome: "",
-      numero: "",
-      descricao: "",
-      cep: "",
-    },
-  ];
-}
-
 function enviaContato(mensagem: contatoSimples) {
   const contatoRequisicao: mensagemContato = {
     from: "tall-leader",
@@ -319,26 +308,76 @@ function adicionarAoBanco(dados: empresa) {
 
 function atualizarBanco(dados: empresa) {}
 
+function pegarTodasEmpresas(): empresa[] {
+  let empresas: empresa[] = [];
+  dbConnection
+    .from("empresas")
+    .select("nome, cep, numero, descricao")
+    .then((rows) => {
+      rows.forEach((row) => {
+        empresas.push({
+          nome: row["nome"],
+          cep: row["cep"],
+          numero: row["numero"],
+          descricao: row["descricao"],
+        });
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      throw err;
+    })
+    .finally(() => {
+      dbConnection.destroy();
+    });
+
+  return empresas;
+}
+
 interface estado {
   numero: string;
   estado: string;
 }
 
-function getEstado(numero: string) {
-    let estado = dbConnection('estado')).find( (estado)=>{
-      return estado.numero === numero
-    })
-    if (estado) {
-        return estado.estado;
-    }
-    else{
-        return "0";
-    } 
+export function getEstado(numero: string) {
+  let estado = dbConnection
+    .from("estado")
+    .select("numero", "estado")
+    .where("numero", "=", numero);
+
+  if (estado) {
+    return String(estado);
+  } else {
+    return "0";
+  }
 }
 
 function setEstado(key: string, value: string) {
-    const estados = dbConnection.select().from('estado');
+  let estado = dbConnection
+    .from("estado")
+    .select("numero", "estado")
+    .where("numero", "=", key);
 
+  const dados: estado = {
+    numero: key,
+    estado: value,
+  };
+
+  if (estado) {
+    dbConnection("estado").where("numero", "=", key).update({
+      estado: value,
+    });
+  } else {
+    dbConnection
+      .insert(dados)
+      .into("estado")
+      .then((data: any) => {
+        console.log(data);
+      })
+      .catch((err: any) => {
+        console.log(err);
+      });
+  }
 }
 
 export async function a(key: string, value: string) {
